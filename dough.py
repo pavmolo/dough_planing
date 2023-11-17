@@ -64,7 +64,7 @@ def distribute_to_trolleys(df):
         
         trolley_df_list.append(trolley_dict)
     
-    return pd.DataFrame(trolley_df_list)
+    return pd.DataFrame(trolley_df_list), trolley_info
 
 
 
@@ -79,7 +79,7 @@ def distribute_to_trolleys_sorted(df):
 
 
 # Обновленная функция schedule_oven_operations с добавлением длительности и состава вагонетки
-def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_time, change_temp_time, df):
+def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_time, change_temp_time, trolley_df, trolley_info):
     start_shift = datetime.strptime(start_shift, '%H:%M')
     end_shift = datetime.strptime(end_shift, '%H:%M')
     ovens_schedule = {f'Печь {i+1}': [] for i in range(num_ovens)}
@@ -88,7 +88,7 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
     
     trolley_composition = pd.DataFrame(columns=['Вагонетка', 'Состав'])
     
-    for _, trolley in df.iterrows():
+    for _, trolley in trolley_df.iterrows():
         next_oven = min(last_operation_time, key=last_operation_time.get)
         start_baking_time = last_operation_time[next_oven]
         
@@ -149,15 +149,10 @@ st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 uploaded_file = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 
 if uploaded_file:
-    # Считывание данных из файла в DataFrame
     df = pd.read_excel(uploaded_file)
-    st.dataframe(df)
-    
-    # Передача DataFrame в функции
-    sorted_trolleys_df = distribute_to_trolleys_sorted(df)
-    ovens_schedule, trolley_composition = schedule_oven_operations('13:00', '21:00', 3, 2, 5, sorted_trolleys_df)
-    oven_schedule_df = to_df_from_schedule(ovens_schedule)
-    trolley_composition_df = to_df_from_list(trolley_composition)
+    # Предполагается, что df содержит столбец 'Время'
+    sorted_trolleys_df, trolley_info = distribute_to_trolleys_sorted(df)
+    ovens_schedule, trolley_composition = schedule_oven_operations('13:00', '21:00', 3, 2, 5, sorted_trolleys_df, trolley_info)
     
     # Вызов функции to_excel для создания файла Excel из DataFrame
     df_xlsx = to_excel(oven_schedule_df, trolley_composition_df)
