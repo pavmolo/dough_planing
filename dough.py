@@ -21,7 +21,7 @@ def distribute_to_trolleys(df):
     trolley_counter = 1
     
     # Проходим по каждой группе товаров с одинаковым типом теста и температурой печи
-    for (test_type, temp), group in sorted_df.groupby(['Тип теста', 'Температура Печи']):
+    for (test_type, temp), group in sorted_df.groupby(['Тип теста', 'Температура Печи'], observed=True):
         # Сброс счетчика листов в текущей вагонетке
         current_trolley_sheets = 0
         # Сброс индекса для правильного доступа к строкам группы
