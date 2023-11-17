@@ -178,9 +178,9 @@ st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 df = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 if df: 
   df = pd.read_excel(df)
-  df_dist = distribute_to_trolleys_sorted(df)
   #ovens_schedule = schedule_oven_operations('12:00', '21:00', 3, 2, 5, df_dist)
-  st.dataframe(df_dist)
+  st.dataframe(df)
+  st.dataframe(distribute_to_trolleys(df))
   df_products = df
   # Установка порядка для категориальных данных
   df_products['Тип теста'] = pd.Categorical(df_products['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
