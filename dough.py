@@ -142,7 +142,7 @@ def to_df_from_schedule(ovens_schedule):
 # Функция для сохранения DataFrame в Excel
 def to_excel(oven_schedule_df, trolley_composition_df):
     output = BytesIO()
-    with pd.ExcelWriter(output) as writer:
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
         oven_schedule_df.to_excel(writer, sheet_name='Oven Schedule', index=False)
         trolley_composition_df.to_excel(writer, sheet_name='Trolley Composition', index=False)
     return output.getvalue()
