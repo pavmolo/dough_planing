@@ -163,13 +163,24 @@ def create_full_baking_schedule(df, temp_for_oven1, start_time, reset_time=10, b
         df['Время замеса'] = pd.to_datetime(df['Время замеса']).dt.strftime('%H:%M')
 
     return df
+def to_df_from_list(dicti):
+    # Преобразование списка словарей в DataFrame
+    schedule_df = pd.DataFrame(dicti)
+    
+    # Преобразование Unix временных меток в наносекундах в удобочитаемый формат даты и времени
+    schedule_df['Начало'] = pd.to_datetime(schedule_df['Начало'], unit='ns')
+    schedule_df['Конец'] = pd.to_datetime(schedule_df['Конец'], unit='ns')
+    
+    # Показать DataFrame
+    return schedule_df
 
 def to_excel():
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
     with writer as w:
-        for i in final_res:
-            i.to_excel(writer, sheet_name=i["Печь"].unique()[0], index=False)
+        for i in ovens_schedule.columns:
+            a = to_df_from_list(ovens_schedule[i])
+            a.to_excel(writer, sheet_name=i, index=False)
     writer._save()
     return output.getvalue()
 
@@ -180,22 +191,8 @@ if df:
   df = pd.read_excel(df)
   st.dataframe(df)
   st.dataframe(distribute_to_trolleys_sorted(df))
-  ovens_schedule = schedule_oven_operations('12:00', '21:00', 3, 2, 5, df)
+  ovens_schedule = schedule_oven_operations('13:00', '21:00', 3, 2, 5, df)
   st.dataframe(ovens_schedule)
-  df_products = df
-  # Установка порядка для категориальных данных
-  df_products['Тип теста'] = pd.Categorical(df_products['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
-  df_products['Есть сироп'] = pd.Categorical(df_products['Есть сироп'], categories=['да', 'нет'], ordered=True)
-    
-  # Сортировка по этим категориям сначала, а затем по температуре печи
-  df_products_sorted = df_products.sort_values(by=['Тип теста', 'Есть сироп', 'Температура Печи'], ascending=[True, False, False])
-  final_res = []
-  shift_start = '13:00'
-  for i in df_products_sorted["Температура Печи"].unique():
-      full_baking_schedule = create_full_baking_schedule(df_products_sorted, i, shift_start)
-      full_baking_schedule = full_baking_schedule[full_baking_schedule['Печь'] == "Печь 1"]
-      full_baking_schedule["Печь"] = f'Печ режим {i}'
-      final_res.append(full_baking_schedule)
  
 df_xlsx = to_excel()
 st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
