@@ -145,6 +145,16 @@ def to_excel(oven_schedule_df, trolley_composition_df):
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         oven_schedule_df.to_excel(writer, sheet_name='Oven Schedule', index=False)
         trolley_composition_df.to_excel(writer, sheet_name='Trolley Composition', index=False)
+        
+        # Получаем активный объект workbook и sheet
+        workbook  = writer.book
+        worksheet = writer.sheets['Trolley Composition']
+        
+        # Применяем перенос текста ко всем ячейкам
+        for row in worksheet.iter_rows():
+            for cell in row:
+                cell.alignment = Alignment(wrapText=True)
+
     return output.getvalue()
 
 
