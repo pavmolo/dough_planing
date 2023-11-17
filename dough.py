@@ -10,58 +10,61 @@ def distribute_to_trolleys(df):
     df['Необходимо листов'] = np.ceil(df['Количество изделий план'] / df['Количество на листе'])
     sorted_df = df.sort_values(by=['Тип теста', 'Температура Печи'])
     
-    # Словарь для хранения информации о вагонетках
     trolley_info = {}
-    
     trolley_counter = 1
+    
     for (test_type, temp), group in sorted_df.groupby(['Тип теста', 'Температура Печи'], observed=True):
         current_trolley_sheets = 0
         group = group.reset_index(drop=True)
-
+        
         for idx, row in group.iterrows():
             sheets_needed = row['Необходимо листов']
+            
             while sheets_needed > 0:
                 trolley_id = f'Вагонетка {trolley_counter}'
                 if trolley_id not in trolley_info:
-                    # Для каждой новой вагонетки сохраняем температуру печи и время выпекания
                     trolley_info[trolley_id] = {
                         'Температура Печи': temp,
                         'Время': row['Время'],
                         'Продукция': []
                     }
-
+                
                 available_sheets = min(row['Количество листов в вагонетке'] - current_trolley_sheets, sheets_needed)
                 if available_sheets <= 0:
                     trolley_counter += 1
                     current_trolley_sheets = 0
                     continue
                 
-                # Добавляем информацию о продукте в список продукции текущей вагонетки
-                trolley_info[trolley_id]['Продукция'].append((row['Наименование товара'], available_sheets, int(sheets_needed * row['Количество на листе'])))
-
+                trolley_info[trolley_id]['Продукция'].append({
+                    'Наименование товара': row['Наименование товара'],
+                    'Количество листов': available_sheets,
+                    'Количество на листе': row['Количество на листе']
+                })
+                
                 sheets_needed -= available_sheets
                 current_trolley_sheets += available_sheets
                 if current_trolley_sheets >= row['Количество листов в вагонетке']:
                     trolley_counter += 1
                     current_trolley_sheets = 0
-
-    # Преобразование словаря trolley_info в DataFrame
+    
     trolley_df_list = []
     for trolley_id, info in trolley_info.items():
-        # Создание словаря для каждой вагонетки
         trolley_dict = {
             'Вагонетка': trolley_id,
             'Температура Печи': info['Температура Печи'],
             'Время': info['Время']
         }
-        # Собираем состав продукции в вагонетке
-        for product_info in info['Продукция']:
-            product_name, sheets, quantity = product_info
+        
+        for prod_info in info['Продукция']:
+            product_name = prod_info['Наименование товара']
+            sheets = prod_info['Количество листов']
+            quantity_per_sheet = prod_info['Количество на листе']
+            quantity = sheets * quantity_per_sheet
             trolley_dict[product_name] = f"{sheets} листов ({quantity} штук)"
+        
         trolley_df_list.append(trolley_dict)
-
-    trolley_df = pd.DataFrame(trolley_df_list)
-    return trolley_df
+    
+    return pd.DataFrame(trolley_df_list)
 
 
 
@@ -83,40 +86,43 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
     last_operation_time = {f'Печь {i+1}': start_shift for i in range(num_ovens)}
     current_temp = {f'Печь {i+1}': None for i in range(num_ovens)}
     
-    # Создание DataFrame для состава вагонетки
     trolley_composition = pd.DataFrame(columns=['Вагонетка', 'Состав'])
-
+    
     for _, trolley in df.iterrows():
         next_oven = min(last_operation_time, key=last_operation_time.get)
         start_baking_time = last_operation_time[next_oven]
+        
         if current_temp[next_oven] != trolley['Температура Печи']:
             start_baking_time += timedelta(minutes=change_temp_time)
             current_temp[next_oven] = trolley['Температура Печи']
-
+        
         end_baking_time = start_baking_time + timedelta(minutes=trolley['Время'] + change_trolley_time)
-
+        
         if end_baking_time <= end_shift:
-            # Формирование состава вагонетки
-            composition = ", ".join([f"{name}: {sheets} листов ({int(sheets * row['Количество на листе'])} штук)"
-                                     for name, sheets in trolley.items() if name != 'Необходимо листов'])
+            composition = ", ".join([
+                f"{prod_info['Наименование товара']}: {prod_info['Количество листов']} листов "
+                f"({int(prod_info['Количество листов'] * prod_info['Количество на листе'])} штук)"
+                for prod_info in trolley_info[trolley['Вагонетка']]['Продукция']
+            ])
             
-            # Добавление записи о составе вагонетки
             trolley_composition = trolley_composition.append({
-                'Вагонетка': trolley.name,
+                'Вагонетка': trolley['Вагонетка'],
                 'Состав': composition
             }, ignore_index=True)
-
+            
             ovens_schedule[next_oven].append({
                 'Начало': start_baking_time.time(),
                 'Конец': end_baking_time.time(),
                 'Длительность': trolley['Время'],
-                'Вагонетка': trolley.name,
+                'Вагонетка': trolley['Вагонетка'],
                 'Температура Печи': trolley['Температура Печи'],
                 'Состав': composition
             })
+            
             last_operation_time[next_oven] = end_baking_time
-
+    
     return ovens_schedule, trolley_composition
+
 
 
 # Функция для преобразования графика печей в DataFrame
