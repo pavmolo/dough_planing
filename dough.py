@@ -4,18 +4,7 @@ import pandas as pd
 from io import BytesIO
 from datetime import timedelta
 from math import ceil
-def distribute_to_trolleys_sorted(df):
-    # Преобразование Размер зуваляшки в числовой формат, 'кусок' будет иметь высокое числовое значение для сортировки в конце
-    df['Вес зуваляшки'] = df['Размер зуваляшки'].replace('кусок', 999).astype(int)
-    
-    # Сортировка по типу теста (сладкое, затем соленое), весу зуваляшки (по убыванию) и количеству листов в вагонетке (по убыванию)
-    df = df.sort_values(by=['Тип теста', 'Вес зуваляшки', 'Количество листов в вагонетке'], ascending=[True, False, False])
 
-    # Сброс индекса после сортировки
-    df.reset_index(drop=True, inplace=True)
-    
-    # Вызов функции распределения продукции по вагонеткам с уже отсортированным DataFrame
-    return distribute_to_trolleys(df)
 # Функция для распределения товаров по вагонеткам
 def distribute_to_trolleys(df):
     # Добавление столбца для количества необходимых листов
@@ -68,7 +57,18 @@ def distribute_to_trolleys(df):
     trolley_df = trolley_df.fillna(0)
 
     return trolley_df
+def distribute_to_trolleys_sorted(df):
+    # Преобразование Размер зуваляшки в числовой формат, 'кусок' будет иметь высокое числовое значение для сортировки в конце
+    df['Вес зуваляшки'] = df['Размер зуваляшки'].replace('кусок', 999).astype(int)
+    
+    # Сортировка по типу теста (сладкое, затем соленое), весу зуваляшки (по убыванию) и количеству листов в вагонетке (по убыванию)
+    df = df.sort_values(by=['Тип теста', 'Вес зуваляшки', 'Количество листов в вагонетке'], ascending=[True, False, False])
 
+    # Сброс индекса после сортировки
+    df.reset_index(drop=True, inplace=True)
+    
+    # Вызов функции распределения продукции по вагонеткам с уже отсортированным DataFrame
+    return distribute_to_trolleys(df)
 # Теперь переопределим функцию create_full_baking_schedule с учетом наличия df_products_sorted
 def create_full_baking_schedule(df, temp_for_oven1, start_time, reset_time=10, basket_interval=3):
     # Инициализация начального времени для каждой печи
@@ -126,8 +126,7 @@ st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 df = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 if df: 
   df = pd.read_excel(df)
-  df = distribute_to_trolleys_sorted(df)
-  st.dataframe(distribute_to_trolleys(df))
+  st.dataframe(distribute_to_trolleys_sorted(df))
   df_products = df
   # Установка порядка для категориальных данных
   df_products['Тип теста'] = pd.Categorical(df_products['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
