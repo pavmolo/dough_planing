@@ -59,16 +59,11 @@ def distribute_to_trolleys(df):
 
     return trolley_df
 def distribute_to_trolleys_sorted(df):
-    # Преобразование Размер зуваляшки в числовой формат, 'кусок' будет иметь высокое числовое значение для сортировки в конце
-    df['Вес зуваляшки'] = df['Размер зуваляшки'].replace('кусок', 999).astype(int)
+    # Конвертация 'кусок' в NaN или другое специфическое число, если необходимо
+    df['Размер зуваляшки'] = pd.to_numeric(df['Размер зуваляшки'], errors='coerce').fillna(999)
     df['Тип теста'] = pd.Categorical(df['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
-    # Сортировка по типу теста (сладкое, затем соленое), весу зуваляшки (по убыванию) и количеству листов в вагонетке (по убыванию)
-    df = df.sort_values(by=['Тип теста', 'Вес зуваляшки', 'Количество листов в вагонетке'], ascending=[True, False, False])
-
-    # Сброс индекса после сортировки
+    df = df.sort_values(by=['Тип теста', 'Размер зуваляшки', 'Количество листов в вагонетке'], ascending=[True, False, False])
     df.reset_index(drop=True, inplace=True)
-    
-    # Вызов функции распределения продукции по вагонеткам с уже отсортированным DataFrame
     return distribute_to_trolleys(df)
 
 
@@ -164,14 +159,11 @@ def create_full_baking_schedule(df, temp_for_oven1, start_time, reset_time=10, b
 
     return df
 def to_df_from_list(dicti):
-    # Преобразование списка словарей в DataFrame
     schedule_df = pd.DataFrame(dicti)
-    
-    # Преобразование Unix временных меток в наносекундах в удобочитаемый формат даты и времени
-    schedule_df['Начало'] = pd.to_datetime(schedule_df['Начало'], unit='ns')
-    schedule_df['Конец'] = pd.to_datetime(schedule_df['Конец'], unit='ns')
-    
-    # Показать DataFrame
+    # Убедитесь, что 'Начало' и 'Конец' являются правильными временными метками, прежде чем преобразовывать их
+    if all(isinstance(x, (int, float)) for x in schedule_df['Начало']):
+        schedule_df['Начало'] = pd.to_datetime(schedule_df['Начало'], unit='ns')
+        schedule_df['Конец'] = pd.to_datetime(schedule_df['Конец'], unit='ns')
     return schedule_df
 
 def to_excel():
