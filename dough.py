@@ -86,33 +86,35 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
     current_temp = {f'Печь {i+1}': None for i in range(num_ovens)}
     
     trolley_composition = pd.DataFrame(columns=['Вагонетка', 'Состав'])
-
-    for _, trolley in trolley_df.iterrows():
+    
+    for index, trolley in trolley_df.iterrows():
         next_oven = min(last_operation_time, key=last_operation_time.get)
         start_baking_time = last_operation_time[next_oven]
+        
         if current_temp[next_oven] != trolley['Температура Печи']:
             start_baking_time += timedelta(minutes=change_temp_time)
             current_temp[next_oven] = trolley['Температура Печи']
         
         end_baking_time = start_baking_time + timedelta(minutes=trolley['Время'] + change_trolley_time)
-
+        
         if end_baking_time <= end_shift:
-            composition = ", ".join([
+            composition_list = [
                 f"{prod_info['Наименование товара']}: {prod_info['Количество листов']} листов "
                 f"({int(prod_info['Количество листов'] * prod_info['Количество на листе'])} штук)"
                 for prod_info in trolley_info[trolley['Вагонетка']]['Продукция']
-            ])
+            ]
+            composition = ", ".join(composition_list)
             
-            # Создаем словарь для новой строки и добавляем ее в DataFrame
-            new_row = {
-                'Вагонетка': trolley['Вагонетка'],
-                'Состав': composition
-            }
-            trolley_composition = pd.concat([trolley_composition, pd.DataFrame([new_row])], ignore_index=True)
+            new_row = pd.DataFrame({
+                'Вагонетка': [trolley['Вагонетка']],
+                'Состав': [composition]
+            })
             
+            trolley_composition = pd.concat([trolley_composition, new_row], ignore_index=True)
+
             ovens_schedule[next_oven].append({
-                'Начало': start_baking_time.time(),
-                'Конец': end_baking_time.time(),
+                'Начало': start_baking_time.time().strftime('%H:%M'),
+                'Конец': end_baking_time.time().strftime('%H:%M'),
                 'Длительность': trolley['Время'],
                 'Вагонетка': trolley['Вагонетка'],
                 'Температура Печи': trolley['Температура Печи'],
@@ -122,6 +124,7 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
             last_operation_time[next_oven] = end_baking_time
     
     return ovens_schedule, trolley_composition
+
 
 
 
