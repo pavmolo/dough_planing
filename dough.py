@@ -133,15 +133,22 @@ def to_excel(oven_schedule_df, trolley_composition_df):
 
 
 st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
-df = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
-if df: 
-    # После того как расписание создано и преобразовано в DataFrame
-    ovens_schedule, trolley_composition = schedule_oven_operations('13:00', '21:00', 3, 2, 5, distribute_to_trolleys_sorted(df))
-    oven_schedule_df = to_df_from_schedule(ovens_schedule)
-    trolley_composition_df = trolley_composition
+uploaded_file = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 
-# Теперь вызываем to_excel с необходимыми аргументами
-df_xlsx = to_excel(oven_schedule_df, trolley_composition_df)
+if uploaded_file:
+    # Считывание данных из файла в DataFrame
+    df = pd.read_excel(uploaded_file)
+    st.dataframe(df)
+    
+    # Передача DataFrame в функции
+    sorted_trolleys_df = distribute_to_trolleys_sorted(df)
+    ovens_schedule, trolley_composition = schedule_oven_operations('13:00', '21:00', 3, 2, 5, sorted_trolleys_df)
+    oven_schedule_df = to_df_from_schedule(ovens_schedule)
+    trolley_composition_df = to_df_from_list(trolley_composition)
+    
+    # Вызов функции to_excel для создания файла Excel из DataFrame
+    df_xlsx = to_excel(oven_schedule_df, trolley_composition_df)
+    st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
  
 st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
     
