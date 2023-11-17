@@ -40,8 +40,13 @@ def create_full_baking_schedule(df, temp_for_oven1, start_time, reset_time=10, b
         else:
             oven2_time = oven_time
             last_temp_oven2 = row['Температура Печи']
+        df = pd.DataFrame(baking_schedule, columns=["Печь", "Наименование товара", "Вагонетка", "Температура Печи", "Время начала выпекания", "Время формовки", "Время замеса", "Длительность"])
+        # Преобразование строк в datetime объекты, а затем форматирование их как 'HH:MM'
+        df['Время начала выпекания'] = pd.to_datetime(df['Время начала выпекания']).dt.strftime('%H:%M')
+        df['Время формовки'] = pd.to_datetime(df['Время формовки']).dt.strftime('%H:%M')
+        df['Время замеса'] = pd.to_datetime(df['Время замеса']).dt.strftime('%H:%M')
 
-    return pd.DataFrame(baking_schedule, columns=["Печь", "Наименование товара", "Вагонетка", "Температура Печи", "Время начала выпекания", "Время формовки", "Время замеса", "Длительность"])
+    return df
 
 def to_excel():
     output = BytesIO()
