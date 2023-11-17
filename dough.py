@@ -4,6 +4,7 @@ import pandas as pd
 from io import BytesIO
 from datetime import timedelta
 from math import ceil
+from datetime import datetime
 
 # Функция для распределения товаров по вагонеткам
 def distribute_to_trolleys(df):
@@ -69,6 +70,57 @@ def distribute_to_trolleys_sorted(df):
     
     # Вызов функции распределения продукции по вагонеткам с уже отсортированным DataFrame
     return distribute_to_trolleys(df)
+
+
+
+# Функция для распределения вагонеток по печам
+def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_time, change_temp_time, trolley_df):
+    # Преобразование времени начала и окончания смены в объекты datetime
+    start_shift = datetime.strptime(start_shift, '%H:%M')
+    end_shift = datetime.strptime(end_shift, '%H:%M')
+    
+    # Инициализация расписания для каждой печи
+    ovens_schedule = {f'Печь {i+1}': [] for i in range(num_ovens)}
+    
+    # Время последней операции в каждой печи
+    last_operation_time = {f'Печь {i+1}': start_shift for i in range(num_ovens)}
+    
+    # Текущий температурный режим каждой печи
+    current_temp = {f'Печь {i+1}': None for i in range(num_ovens)}
+    
+    # Обход всех вагонеток в df
+    for _, trolley in trolley_df.iterrows():
+        # Выбор печи с ближайшим доступным временем
+        next_oven = min(last_operation_time, key=last_operation_time.get)
+        
+        # Время начала выпекания в выбранной печи
+        start_baking_time = last_operation_time[next_oven]
+        
+        # Проверка необходимости смены температурного режима
+        if current_temp[next_oven] != trolley['Температура Печи']:
+            start_baking_time += timedelta(minutes=change_temp_time)
+            current_temp[next_oven] = trolley['Температура Печи']
+        
+        # Добавление времени выпекания и времени на смену вагонетки
+        end_baking_time = start_baking_time + timedelta(minutes=trolley['Время'] + change_trolley_time)
+        
+        # Проверка на окончание смены
+        if end_baking_time > end_shift:
+            continue  # Если время выпекания выходит за пределы смены, пропустим эту вагонетку
+        
+        # Добавление операции выпекания в расписание печи
+        ovens_schedule[next_oven].append({
+            'Начало': start_baking_time.time(),
+            'Конец': end_baking_time.time(),
+            'Вагонетка': trolley.name,
+            'Температура Печи': trolley['Температура Печи']
+        })
+        
+        # Обновление времени последней операции в печи
+        last_operation_time[next_oven] = end_baking_time
+
+    return ovens_schedule
+
 # Теперь переопределим функцию create_full_baking_schedule с учетом наличия df_products_sorted
 def create_full_baking_schedule(df, temp_for_oven1, start_time, reset_time=10, basket_interval=3):
     # Инициализация начального времени для каждой печи
@@ -126,7 +178,8 @@ st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 df = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 if df: 
   df = pd.read_excel(df)
-  st.dataframe(distribute_to_trolleys_sorted(df))
+  ovens_schedule = schedule_oven_operations('12:00', '21:00', 3, 2, 5, distribute_to_trolleys_sorted(df))
+  st.dataframe(ovens_schedule)
   df_products = df
   # Установка порядка для категориальных данных
   df_products['Тип теста'] = pd.Categorical(df_products['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
