@@ -3,7 +3,60 @@ import numpy as np
 import pandas as pd
 from io import BytesIO
 from datetime import timedelta
+from math import ceil
 
+# Функция для распределения товаров по вагонеткам
+def distribute_to_trolleys(df):
+    # Добавление столбца для количества необходимых листов
+    df['Необходимо листов'] = np.ceil(df['Количество изделий план'] / df['Количество на листе'])
+    
+    # Сортировка по типу теста и температуре для последовательного распределения
+    sorted_df = df.sort_values(by=['Тип теста', 'Температура Печи'])
+    
+    # Создание DataFrame для вагонеток
+    trolley_df = pd.DataFrame()
+    
+    # Счетчик вагонеток
+    trolley_counter = 1
+    
+    # Проходим по каждой группе товаров с одинаковым типом теста и температурой печи
+    for (test_type, temp), group in sorted_df.groupby(['Тип теста', 'Температура Печи']):
+        # Сброс счетчика листов в текущей вагонетке
+        current_trolley_sheets = 0
+        # Сброс индекса для правильного доступа к строкам группы
+        group = group.reset_index(drop=True)
+
+        # Проходим по каждой строке в группе
+        for idx, row in group.iterrows():
+            sheets_needed = row['Необходимо листов']
+            # Распределение товара по вагонеткам
+            while sheets_needed > 0:
+                # Определяем, сколько листов можем разместить в текущей вагонетке
+                available_sheets = min(row['Количество листов в вагонетке'] - current_trolley_sheets, sheets_needed)
+                
+                # Если нет места в текущей вагонетке, переходим к следующей
+                if available_sheets <= 0:
+                    trolley_counter += 1
+                    current_trolley_sheets = 0
+                    continue
+                
+                # Размещаем листы в вагонетке
+                trolley_id = f'Вагонетка {trolley_counter}'
+                trolley_df.at[trolley_id, row['Наименование товара']] = available_sheets + trolley_df.get((trolley_id, row['Наименование товара']), 0)
+                
+                # Уменьшаем количество оставшихся листов
+                sheets_needed -= available_sheets
+                current_trolley_sheets += available_sheets
+
+                # Если текущая вагонетка заполнена, переходим к следующей
+                if current_trolley_sheets >= row['Количество листов в вагонетке']:
+                    trolley_counter += 1
+                    current_trolley_sheets = 0
+
+    # Заполнение нулями отсутствующих значений
+    trolley_df = trolley_df.fillna(0)
+
+    return trolley_df
 
 # Теперь переопределим функцию create_full_baking_schedule с учетом наличия df_products_sorted
 def create_full_baking_schedule(df, temp_for_oven1, start_time, reset_time=10, basket_interval=3):
@@ -62,7 +115,7 @@ st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 df = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 if df: 
   df = pd.read_excel(df)
-  st.dataframe(df)
+  st.dataframe(distribute_to_trolleys(df))
   df_products = df
   # Установка порядка для категориальных данных
   df_products['Тип теста'] = pd.Categorical(df_products['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
@@ -77,7 +130,7 @@ if df:
       full_baking_schedule = full_baking_schedule[full_baking_schedule['Печь'] == "Печь 1"]
       full_baking_schedule["Печь"] = f'Печ режим {i}'
       final_res.append(full_baking_schedule)
-  
+ 
 df_xlsx = to_excel()
 st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
     
