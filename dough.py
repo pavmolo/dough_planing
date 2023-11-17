@@ -4,7 +4,18 @@ import pandas as pd
 from io import BytesIO
 from datetime import timedelta
 from math import ceil
+def distribute_to_trolleys_sorted(df):
+    # Преобразование Размер зуваляшки в числовой формат, 'кусок' будет иметь высокое числовое значение для сортировки в конце
+    df['Вес зуваляшки'] = df['Размер зуваляшки'].replace('кусок', 999).astype(int)
+    
+    # Сортировка по типу теста (сладкое, затем соленое), весу зуваляшки (по убыванию) и количеству листов в вагонетке (по убыванию)
+    df = df.sort_values(by=['Тип теста', 'Вес зуваляшки', 'Количество листов в вагонетке'], ascending=[True, False, False])
 
+    # Сброс индекса после сортировки
+    df.reset_index(drop=True, inplace=True)
+    
+    # Вызов функции распределения продукции по вагонеткам с уже отсортированным DataFrame
+    return distribute_to_trolleys(df)
 # Функция для распределения товаров по вагонеткам
 def distribute_to_trolleys(df):
     # Добавление столбца для количества необходимых листов
@@ -115,6 +126,7 @@ st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 df = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 if df: 
   df = pd.read_excel(df)
+  df = distribute_to_trolleys_sorted(df)
   st.dataframe(distribute_to_trolleys(df))
   df_products = df
   # Установка порядка для категориальных данных
