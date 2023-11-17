@@ -180,7 +180,7 @@ if df:
   df = pd.read_excel(df)
   st.dataframe(df)
   st.dataframe(distribute_to_trolleys_sorted(df))
-  ovens_schedule = schedule_oven_operations('12:00', '21:00', 3, 2, 5, distribute_to_trolleys(df))
+  ovens_schedule = schedule_oven_operations('12:00', '21:00', 3, 2, 5, df)
   st.dataframe(ovens_schedule)
   df_products = df
   # Установка порядка для категориальных данных
