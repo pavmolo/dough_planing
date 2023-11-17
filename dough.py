@@ -178,7 +178,7 @@ def to_excel():
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
     with writer as w:
-        for i in ovens_schedule.columns:
+        for i in pd.DataFrame(ovens_schedule).columns:
             a = to_df_from_list(ovens_schedule[i])
             a.to_excel(writer, sheet_name=i, index=False)
     writer._save()
