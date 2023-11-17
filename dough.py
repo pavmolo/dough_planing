@@ -64,7 +64,12 @@ if df:
   df = pd.read_excel(df)
   st.dataframe(df)
   df_products = df
-  df_products_sorted = df_products.sort_values(by=['Температура Печи'], ascending=[False])
+  # Установка порядка для категориальных данных
+  df_products['Тип теста'] = pd.Categorical(df_products['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
+  df_products['Есть сироп'] = pd.Categorical(df_products['Есть сироп'], categories=['да', 'нет'], ordered=True)
+    
+  # Сортировка по этим категориям сначала, а затем по температуре печи
+  df_products_sorted = df_products.sort_values(by=['Тип теста', 'Есть сироп', 'Температура Печи'], ascending=[True, False, False])
   final_res = []
   shift_start = '13:00'
   for i in df_products_sorted["Температура Печи"].unique():
