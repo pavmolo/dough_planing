@@ -6,56 +6,61 @@ from datetime import timedelta
 from math import ceil
 from datetime import datetime
 
-# Функция для распределения товаров по вагонеткам
 def distribute_to_trolleys(df):
-    # Добавление столбца для количества необходимых листов
     df['Необходимо листов'] = np.ceil(df['Количество изделий план'] / df['Количество на листе'])
-    
-    # Сортировка по типу теста и температуре для последовательного распределения
     sorted_df = df.sort_values(by=['Тип теста', 'Температура Печи'])
     
-    # Создание DataFrame для вагонеток
-    trolley_df = pd.DataFrame()
+    # Словарь для хранения информации о вагонетках
+    trolley_info = {}
     
-    # Счетчик вагонеток
     trolley_counter = 1
-    
-    # Проходим по каждой группе товаров с одинаковым типом теста и температурой печи
     for (test_type, temp), group in sorted_df.groupby(['Тип теста', 'Температура Печи'], observed=True):
-        # Сброс счетчика листов в текущей вагонетке
         current_trolley_sheets = 0
-        # Сброс индекса для правильного доступа к строкам группы
         group = group.reset_index(drop=True)
 
-        # Проходим по каждой строке в группе
         for idx, row in group.iterrows():
             sheets_needed = row['Необходимо листов']
-            # Распределение товара по вагонеткам
             while sheets_needed > 0:
-                # Определяем, сколько листов можем разместить в текущей вагонетке
+                trolley_id = f'Вагонетка {trolley_counter}'
+                if trolley_id not in trolley_info:
+                    # Для каждой новой вагонетки сохраняем температуру печи и начинаем список продукции
+                    trolley_info[trolley_id] = {
+                        'Температура Печи': temp,
+                        'Продукция': []
+                    }
+
                 available_sheets = min(row['Количество листов в вагонетке'] - current_trolley_sheets, sheets_needed)
-                
-                # Если нет места в текущей вагонетке, переходим к следующей
                 if available_sheets <= 0:
                     trolley_counter += 1
                     current_trolley_sheets = 0
                     continue
                 
-                # Размещаем листы в вагонетке
-                trolley_id = f'Вагонетка {trolley_counter}'
-                trolley_df.at[trolley_id, row['Наименование товара']] = available_sheets + trolley_df.get((trolley_id, row['Наименование товара']), 0)
-                
-                # Уменьшаем количество оставшихся листов
+                # Добавляем информацию о продукте в список продукции текущей вагонетки
+                trolley_info[trolley_id]['Продукция'].append((row['Наименование товара'], available_sheets, row['Количество изделий план']))
+
                 sheets_needed -= available_sheets
                 current_trolley_sheets += available_sheets
-
-                # Если текущая вагонетка заполнена, переходим к следующей
                 if current_trolley_sheets >= row['Количество листов в вагонетке']:
                     trolley_counter += 1
                     current_trolley_sheets = 0
 
-    # Заполнение нулями отсутствующих значений
-    trolley_df = trolley_df.fillna(0)
+    # Преобразование словаря trolley_info в DataFrame
+    trolley_df_list = []
+    for trolley_id, info in trolley_info.items():
+        # Создание словаря для каждой вагонетки
+        trolley_dict = {
+            'Вагонетка': trolley_id,
+            'Температура Печи': info['Температура Печи']
+        }
+        # Добавляем информацию о каждом продукте в вагонетке
+        for product_info in info['Продукция']:
+            product_name, sheets, quantity = product_info
+            trolley_dict[product_name] = f"{sheets} листов ({quantity} штук)"
+        trolley_df_list.append(trolley_dict)
+
+    trolley_df = pd.DataFrame(trolley_df_list)
+    return trolley_df
+
 
     return trolley_df
 def distribute_to_trolleys_sorted(df):
