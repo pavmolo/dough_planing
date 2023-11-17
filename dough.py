@@ -68,80 +68,67 @@ def distribute_to_trolleys_sorted(df):
 
 
 
-# Функция для распределения вагонеток по печам
-def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_time, change_temp_time, trolley_df):
-    # Преобразование времени начала и окончания смены в объекты datetime
+# Обновленная функция schedule_oven_operations с добавлением длительности и состава вагонетки
+def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_time, change_temp_time, df):
     start_shift = datetime.strptime(start_shift, '%H:%M')
     end_shift = datetime.strptime(end_shift, '%H:%M')
-    
-    # Инициализация расписания для каждой печи
     ovens_schedule = {f'Печь {i+1}': [] for i in range(num_ovens)}
-    
-    # Время последней операции в каждой печи
     last_operation_time = {f'Печь {i+1}': start_shift for i in range(num_ovens)}
-    
-    # Текущий температурный режим каждой печи
     current_temp = {f'Печь {i+1}': None for i in range(num_ovens)}
     
-    # Обход всех вагонеток в df
-    for _, trolley in trolley_df.iterrows():
-        # Выбор печи с ближайшим доступным временем
+    # Создание DataFrame для состава вагонетки
+    trolley_composition = pd.DataFrame(columns=['Вагонетка', 'Состав'])
+
+    for _, trolley in df.iterrows():
         next_oven = min(last_operation_time, key=last_operation_time.get)
-        
-        # Время начала выпекания в выбранной печи
         start_baking_time = last_operation_time[next_oven]
-        
-        # Проверка необходимости смены температурного режима
         if current_temp[next_oven] != trolley['Температура Печи']:
             start_baking_time += timedelta(minutes=change_temp_time)
             current_temp[next_oven] = trolley['Температура Печи']
-        
-        # Добавление времени выпекания и времени на смену вагонетки
+
         end_baking_time = start_baking_time + timedelta(minutes=trolley['Время'] + change_trolley_time)
-        
-        # Проверка на окончание смены
-        if end_baking_time > end_shift:
-            continue  # Если время выпекания выходит за пределы смены, пропустим эту вагонетку
-        
-        # Расчет длительности выпекания
-        duration = (end_baking_time - start_baking_time).seconds // 60  # в минутах
-        
-        # Состав вагонетки
-        trolley_composition = ', '.join([
-            f"{product}: {int(trolley[product])} листов ({int(trolley[product]) * df.loc[df['Наименование товара'] == product, 'Количество на листе'].iloc[0]} штук)"
-            for product in df['Наименование товара'].unique() if trolley.get(product, 0) > 0
-        ])
-        
-        # Добавление операции выпекания в расписание печи
-        ovens_schedule[next_oven].append({
-            'Начало': start_baking_time.time(),
-            'Конец': end_baking_time.time(),
-            'Длительность': duration,
-            'Состав вагонетки': trolley_composition,
-            'Вагонетка': trolley.name,
-            'Температура Печи': trolley['Температура Печи']
-        })
-        
-        # Обновление времени последней операции в печи
-        last_operation_time[next_oven] = end_baking_time
+
+        if end_baking_time <= end_shift:
+            # Формирование состава вагонетки
+            composition = ", ".join([f"{name}: {sheets} листов ({int(sheets * row['Количество на листе'])} штук)"
+                                     for name, sheets in trolley.items() if name != 'Необходимо листов'])
+            
+            # Добавление записи о составе вагонетки
+            trolley_composition = trolley_composition.append({
+                'Вагонетка': trolley.name,
+                'Состав': composition
+            }, ignore_index=True)
+
+            ovens_schedule[next_oven].append({
+                'Начало': start_baking_time.time(),
+                'Конец': end_baking_time.time(),
+                'Длительность': trolley['Время'],
+                'Вагонетка': trolley.name,
+                'Температура Печи': trolley['Температура Печи'],
+                'Состав': composition
+            })
+            last_operation_time[next_oven] = end_baking_time
+
+    return ovens_schedule, trolley_composition
 
 
-def to_df_from_list(dicti):
-    schedule_df = pd.DataFrame(dicti)
-    # Убедитесь, что 'Начало' и 'Конец' являются правильными временными метками, прежде чем преобразовывать их
-    if all(isinstance(x, (int, float)) for x in schedule_df['Начало']):
-        schedule_df['Начало'] = pd.to_datetime(schedule_df['Начало'], unit='ns')
-        schedule_df['Конец'] = pd.to_datetime(schedule_df['Конец'], unit='ns')
-    return schedule_df
+# Функция для преобразования графика печей в DataFrame
+def to_df_from_schedule(ovens_schedule):
+    # Преобразование данных расписания в DataFrame
+    oven_dfs = []
+    for oven, schedule in ovens_schedule.items():
+        oven_df = pd.DataFrame(schedule)
+        oven_df.insert(0, 'Печь', oven)  # Добавление столбца с названием печи
+        oven_dfs.append(oven_df)
+    full_schedule_df = pd.concat(oven_dfs, ignore_index=True)
+    return full_schedule_df
 
-def to_excel():
+# Функция для сохранения DataFrame в Excel
+def to_excel(oven_schedule_df, trolley_composition_df):
     output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    with writer as w:
-        for i in pd.DataFrame(ovens_schedule).columns:
-            a = to_df_from_list(ovens_schedule[i])
-            a.to_excel(writer, sheet_name=i, index=False)
-    writer._save()
+    with pd.ExcelWriter(output) as writer:
+        oven_schedule_df.to_excel(writer, sheet_name='Oven Schedule', index=False)
+        trolley_composition_df.to_excel(writer, sheet_name='Trolley Composition', index=False)
     return output.getvalue()
 
 
