@@ -103,7 +103,7 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
                 f"({int(prod_info['Количество листов'] * prod_info['Количество на листе'])} штук)"
                 for prod_info in trolley_info[trolley['Вагонетка']]['Продукция']
             ]
-            composition = ", ".join(composition_list)
+            composition = "\n".join(composition_list)
             
             new_row = pd.DataFrame({
                 'Вагонетка': [trolley['Вагонетка']],
