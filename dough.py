@@ -67,7 +67,6 @@ def distribute_to_trolleys(df):
     return pd.DataFrame(trolley_df_list), trolley_info
 
 
-
 def distribute_to_trolleys_sorted(df):
     # Конвертация 'кусок' в NaN или другое специфическое число, если необходимо
     df['Размер зуваляшки'] = pd.to_numeric(df['Размер зуваляшки'], errors='coerce').fillna(999)
@@ -87,17 +86,16 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
     current_temp = {f'Печь {i+1}': None for i in range(num_ovens)}
     
     trolley_composition = pd.DataFrame(columns=['Вагонетка', 'Состав'])
-    
+
     for _, trolley in trolley_df.iterrows():
         next_oven = min(last_operation_time, key=last_operation_time.get)
         start_baking_time = last_operation_time[next_oven]
-        
         if current_temp[next_oven] != trolley['Температура Печи']:
             start_baking_time += timedelta(minutes=change_temp_time)
             current_temp[next_oven] = trolley['Температура Печи']
         
         end_baking_time = start_baking_time + timedelta(minutes=trolley['Время'] + change_trolley_time)
-        
+
         if end_baking_time <= end_shift:
             composition = ", ".join([
                 f"{prod_info['Наименование товара']}: {prod_info['Количество листов']} листов "
@@ -105,8 +103,12 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
                 for prod_info in trolley_info[trolley['Вагонетка']]['Продукция']
             ])
             
+            # Создаем словарь для новой строки и добавляем ее в DataFrame
+            new_row = {
+                'Вагонетка': trolley['Вагонетка'],
+                'Состав': composition
+            }
             trolley_composition = pd.concat([trolley_composition, pd.DataFrame([new_row])], ignore_index=True)
-
             
             ovens_schedule[next_oven].append({
                 'Начало': start_baking_time.time(),
