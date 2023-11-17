@@ -23,9 +23,10 @@ def distribute_to_trolleys(df):
             while sheets_needed > 0:
                 trolley_id = f'Вагонетка {trolley_counter}'
                 if trolley_id not in trolley_info:
-                    # Для каждой новой вагонетки сохраняем температуру печи и начинаем список продукции
+                    # Для каждой новой вагонетки сохраняем температуру печи и время выпекания
                     trolley_info[trolley_id] = {
                         'Температура Печи': temp,
+                        'Время': row['Время'],
                         'Продукция': []
                     }
 
@@ -36,7 +37,7 @@ def distribute_to_trolleys(df):
                     continue
                 
                 # Добавляем информацию о продукте в список продукции текущей вагонетки
-                trolley_info[trolley_id]['Продукция'].append((row['Наименование товара'], available_sheets, row['Количество изделий план']))
+                trolley_info[trolley_id]['Продукция'].append((row['Наименование товара'], available_sheets, int(sheets_needed * row['Количество на листе'])))
 
                 sheets_needed -= available_sheets
                 current_trolley_sheets += available_sheets
@@ -50,9 +51,10 @@ def distribute_to_trolleys(df):
         # Создание словаря для каждой вагонетки
         trolley_dict = {
             'Вагонетка': trolley_id,
-            'Температура Печи': info['Температура Печи']
+            'Температура Печи': info['Температура Печи'],
+            'Время': info['Время']
         }
-        # Добавляем информацию о каждом продукте в вагонетке
+        # Собираем состав продукции в вагонетке
         for product_info in info['Продукция']:
             product_name, sheets, quantity = product_info
             trolley_dict[product_name] = f"{sheets} листов ({quantity} штук)"
@@ -62,7 +64,7 @@ def distribute_to_trolleys(df):
     return trolley_df
 
 
-    return trolley_df
+
 def distribute_to_trolleys_sorted(df):
     # Конвертация 'кусок' в NaN или другое специфическое число, если необходимо
     df['Размер зуваляшки'] = pd.to_numeric(df['Размер зуваляшки'], errors='coerce').fillna(999)
