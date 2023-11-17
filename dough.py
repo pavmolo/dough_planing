@@ -153,11 +153,19 @@ uploaded_file = st.file_uploader("Выберите XLSX файл с данным
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
-    # Предполагается, что df содержит столбец 'Время'
     sorted_trolleys_df, trolley_info = distribute_to_trolleys_sorted(df)
     ovens_schedule, trolley_composition = schedule_oven_operations('13:00', '21:00', 3, 2, 5, sorted_trolleys_df, trolley_info)
-    
-    # Вызов функции to_excel для создания файла Excel из DataFrame
-    df_xlsx = to_excel(oven_schedule_df, trolley_composition_df)
+
+    # Преобразование ovens_schedule в DataFrame
+    oven_schedule_list = []
+    for oven, schedule_list in ovens_schedule.items():
+        for schedule in schedule_list:
+            schedule['Печь'] = oven
+            oven_schedule_list.append(schedule)
+    oven_schedule_df = pd.DataFrame(oven_schedule_list)
+
+    # Теперь вызываем функцию to_excel с необходимыми аргументами
+    df_xlsx = to_excel(oven_schedule_df, trolley_composition)
     st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
+
     
