@@ -149,6 +149,4 @@ if uploaded_file:
     # Вызов функции to_excel для создания файла Excel из DataFrame
     df_xlsx = to_excel(oven_schedule_df, trolley_composition_df)
     st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
- 
-st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
     
