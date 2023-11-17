@@ -105,10 +105,8 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
                 for prod_info in trolley_info[trolley['Вагонетка']]['Продукция']
             ])
             
-            trolley_composition = trolley_composition.append({
-                'Вагонетка': trolley['Вагонетка'],
-                'Состав': composition
-            }, ignore_index=True)
+            trolley_composition = pd.concat([trolley_composition, pd.DataFrame([new_row])], ignore_index=True)
+
             
             ovens_schedule[next_oven].append({
                 'Начало': start_baking_time.time(),
