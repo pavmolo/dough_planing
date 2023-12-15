@@ -162,36 +162,6 @@ if uploaded_file:
 
 
 
-
-
-
-
-    
-    # Предположим, что df - это ваш исходный датафрейм
-    df = pd.DataFrame(distribute_to_trolleys(df_xlsx)[1]).T
-    
-    # Создаем новый пустой датафрейм
-    new_rows = []
-    
-    # Проходим по всем строкам исходного датафрейма
-    for index, row in df.iterrows():
-        # Извлекаем данные из столбца 'Продукция'
-        products = row['Продукция']
-        
-        # Для каждого элемента в 'Продукция' создаем новую строку
-        for product in products:
-            new_row = row.copy()
-            new_row['Наименование товара'] = product['Наименование товара']
-            new_row['Количество листов'] = product['Количество листов']
-            new_row['Количество на листе'] = product['Количество на листе']
-            
-            # Удаляем старую информацию о продукции
-            del new_row['Продукция']
-    
-            new_rows.append(new_row)
-    
-    # Преобразуем список новых строк в новый датафрейм
-    new_df = pd.DataFrame(new_rows)
     
     
     split_rows = []
