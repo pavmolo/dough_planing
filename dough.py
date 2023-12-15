@@ -22,13 +22,14 @@ def distribute_to_trolleys(df):
             sheets_needed = row['Необходимо листов']
             
             while sheets_needed > 0:
-                trolley_id = f'Вагонетка {trolley_counter}'
-                if trolley_id not in trolley_info:
-                    trolley_info[trolley_id] = {
-                        'Температура Печи': temp,
-                        'Время': row['Время'],
-                        'Продукция': []
-                    }
+            trolley_id = f'Вагонетка {trolley_counter}'
+            if trolley_id not in trolley_info:
+                trolley_info[trolley_id] = {
+                    'Температура Печи': temp,
+                    'Время': row['Время'],
+                    'Продукция': [],
+                    'Листов в Вагонетке': 0  # Новое поле для количества листов
+                }
                 
                 available_sheets = min(row['Количество листов в вагонетке'] - current_trolley_sheets, sheets_needed)
                 if available_sheets <= 0:
@@ -47,6 +48,7 @@ def distribute_to_trolleys(df):
                 if current_trolley_sheets >= row['Количество листов в вагонетке']:
                     trolley_counter += 1
                     current_trolley_sheets = 0
+            trolley_info[trolley_id]['Листов в Вагонетке'] += available_sheets
     
     trolley_df_list = []
     for trolley_id, info in trolley_info.items():
