@@ -258,7 +258,6 @@ if uploaded_file:
     # Форматирование времени без секунд
     df_vag['Время начала формовки'] = df_vag['Время начала формовки'].dt.strftime('%H:%M')
     
-    df_sorted['Вагонетка'] = df_sorted.index
     zuvalashka_start = df_sorted.merge(df_xlsx, on='Наименование товара', how='left')
     zuvalashka_start['Время оконч. изг. зуваляшек'] = zuvalashka_start.apply(
         lambda row: subtract_minutes(row['Время начала формовки'], row['Длит. Отстоя зуваляжки, мин']),
