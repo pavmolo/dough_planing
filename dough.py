@@ -124,14 +124,14 @@ def to_df_from_schedule(ovens_schedule):
     return full_schedule_df
 
 # Функция для сохранения DataFrame в Excel
-def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_df, dough_df):
+def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         oven_schedule_df.to_excel(writer, sheet_name='Oven Schedule', index=False)
         trolley_composition_df.to_excel(writer, sheet_name='Trolley Composition', index=False)
         df_formovka.to_excel(writer, sheet_name='Form Plan', index=True)
         zuvalashka_df.to_excel(writer, sheet_name='Zuvalashka Plan', index=True)
-        dough_df.to_excel(writer, sheet_name='Testo Plan', index=True)
+        #dough_df.to_excel(writer, sheet_name='Testo Plan', index=True)
         
         # Получаем активный объект workbook и sheet
         workbook  = writer.book
@@ -291,7 +291,7 @@ if uploaded_file:
 
     
     # Теперь вызываем функцию to_excel с необходимыми аргументами
-    df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df, dough_df)
+    df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df)
     st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
 
     
