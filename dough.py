@@ -282,6 +282,8 @@ if uploaded_file:
         lambda row: subtract_minutes(row['Время начала изг. зуваляшек'], row['Время отстойки теста']),
         axis=1
     )
+    dough_master
+    dough_zero
     dough_start['Время начала изг. теста'] = dough_start.apply(
         lambda row: subtract_minutes(row['Время оконч. изг. теста'], row['Время изготовления теста']),
         axis=1
