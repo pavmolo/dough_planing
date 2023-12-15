@@ -124,12 +124,13 @@ def to_df_from_schedule(ovens_schedule):
     return full_schedule_df
 
 # Функция для сохранения DataFrame в Excel
-def to_excel(oven_schedule_df, trolley_composition_df, df_formovka):
+def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         oven_schedule_df.to_excel(writer, sheet_name='Oven Schedule', index=False)
         trolley_composition_df.to_excel(writer, sheet_name='Trolley Composition', index=False)
         df_formovka.to_excel(writer, sheet_name='Form Plan', index=True)
+        zuvalashka_df.to_excel(writer, sheet_name='Form Plan', index=True)
         
         # Получаем активный объект workbook и sheet
         workbook  = writer.book
@@ -259,13 +260,23 @@ if uploaded_file:
     # Сортировка DataFrame по столбцу 'Время начала формовки'
     df_sorted = df_vag.sort_values(by='Время начала формовки')
 
-
+    zuvalashka_start = df_sorted.merge(df, on='Наименование товара', how='left')
+    zuvalashka_start['Время оконч. изг. зуваляшек'] = zuvalashka_start.apply(
+        lambda row: subtract_minutes(row['Время начала формовки'], row['Длит. Отстоя зуваляжки, мин']),
+        axis=1
+    )
+    zuvalashka_start['Время начала изг. зуваляшек'] = zuvalashka_start.apply(
+        lambda row: subtract_minutes(row['Время оконч. изг. зуваляшек'], row['Длит. формовки зуваляжки, мин']),
+        axis=1
+    )
+    zuvalashka_start 
+    zuvalashka_df = pd.pivot_table(zuvalashka_start, values='ШТ', index=['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Размер зуваляшки, гр'], aggfunc='sum')
 
 
 
     
     # Теперь вызываем функцию to_excel с необходимыми аргументами
-    df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted)
+    df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df)
     st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
 
     
