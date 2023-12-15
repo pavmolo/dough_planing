@@ -221,7 +221,7 @@ if uploaded_file:
     # Убедимся, что 'Наименование товара' не является индексом в обоих датафреймах
     new_df['Вагонетка'] = new_df.index
     # Выполним слияние, сохраняя индексы из new_df
-    result_df = split_df.merge(df_xlsx, on='Наименование товара', how='left')
+    result_df = split_df.merge(df, on='Наименование товара', how='left')
     
     # Функция для вычитания минут из времени
     def subtract_minutes(time_str, minutes):
