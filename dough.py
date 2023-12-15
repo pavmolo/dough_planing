@@ -143,35 +143,7 @@ def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_d
                 cell.alignment = Alignment(wrapText=True)
 
     return output.getvalue()
-def extract_quantity(string):
-    match = re.search(r'\((\d+) штук\)', string)
-    if match:
-        return int(match.group(1))
-    return None
 
-# Применяем функцию к столбцу 'Состав' и создаем новый столбец 'Количество штук'
-split_df['Количество штук'] = split_df['Состав'].apply(extract_quantity)
-def extract_product_name(string):
-    return string.split(':')[0].strip()
-
-# Применяем функцию к столбцу 'Состав' и создаем новый столбец 'Наименование товара'
-split_df['Наименование товара'] = split_df['Состав'].apply(extract_product_name)
-
-# Убедимся, что 'Наименование товара' не является индексом в обоих датафреймах
-new_df['Вагонетка'] = new_df.index
-# Выполним слияние, сохраняя индексы из new_df
-result_df = split_df.merge(df, on='Наименование товара', how='left')
-
-# Функция для вычитания минут из времени
-def subtract_minutes(time_str, minutes):
-    # Преобразование строки времени в объект datetime
-    time_obj = datetime.strptime(time_str, '%H:%M')
-    
-    # Вычитание минут
-    new_time = time_obj - timedelta(minutes=minutes)
-
-    # Преобразование обратно в строку
-    return new_time.strftime('%H:%M')
 
 st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 uploaded_file = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
@@ -234,7 +206,35 @@ if uploaded_file:
     
     # Преобразуем список разделенных строк в датафрейм
     split_df = pd.DataFrame(split_rows)
-
+    def extract_quantity(string):
+        match = re.search(r'\((\d+) штук\)', string)
+        if match:
+            return int(match.group(1))
+        return None
+    
+    # Применяем функцию к столбцу 'Состав' и создаем новый столбец 'Количество штук'
+    split_df['Количество штук'] = split_df['Состав'].apply(extract_quantity)
+    def extract_product_name(string):
+        return string.split(':')[0].strip()
+    
+    # Применяем функцию к столбцу 'Состав' и создаем новый столбец 'Наименование товара'
+    split_df['Наименование товара'] = split_df['Состав'].apply(extract_product_name)
+    
+    # Убедимся, что 'Наименование товара' не является индексом в обоих датафреймах
+    new_df['Вагонетка'] = new_df.index
+    # Выполним слияние, сохраняя индексы из new_df
+    result_df = split_df.merge(df, on='Наименование товара', how='left')
+    
+    # Функция для вычитания минут из времени
+    def subtract_minutes(time_str, minutes):
+        # Преобразование строки времени в объект datetime
+        time_obj = datetime.strptime(time_str, '%H:%M')
+        
+        # Вычитание минут
+        new_time = time_obj - timedelta(minutes=minutes)
+    
+        # Преобразование обратно в строку
+        return new_time.strftime('%H:%M')
     
     df_vag = pd.DataFrame(index=result_df['Вагонетка'])
     df_vag['Наименование товара'] = result_df['Наименование товара'].values
