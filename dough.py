@@ -130,7 +130,7 @@ def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_d
         oven_schedule_df.to_excel(writer, sheet_name='Oven Schedule', index=False)
         trolley_composition_df.to_excel(writer, sheet_name='Trolley Composition', index=False)
         df_formovka.to_excel(writer, sheet_name='Form Plan', index=True)
-        zuvalashka_df.to_excel(writer, sheet_name='Form Plan', index=True)
+        zuvalashka_df.to_excel(writer, sheet_name='Zuvalashka Plan', index=True)
         
         # Получаем активный объект workbook и sheet
         workbook  = writer.book
