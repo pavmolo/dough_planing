@@ -9,7 +9,7 @@ from openpyxl.styles import Alignment
 
 def distribute_to_trolleys(df):
     df['Необходимо листов'] = np.ceil(df['Количество изделий план'] / df['Количество на листе'])
-    sorted_df = df.sort_values(by=['Тип теста', 'Температура Печи', 'Размер зуваляшки'], ascending=[True, True, False])
+    sorted_df = df.sort_values(by=['Тип теста', 'Температура Печи', 'Размер зуваляшки, гр'], ascending=[True, True, False])
     
     trolley_info = {}
     trolley_counter = 1
@@ -49,9 +49,9 @@ def distribute_to_trolleys(df):
 
 def distribute_to_trolleys_sorted(df):
     # Конвертация 'кусок' в NaN или другое специфическое число, если необходимо
-    df['Размер зуваляшки'] = pd.to_numeric(df['Размер зуваляшки'], errors='coerce').fillna(999)
+    df['Размер зуваляшки, гр'] = pd.to_numeric(df['Размер зуваляшки, гр'], errors='coerce').fillna(999)
     df['Тип теста'] = pd.Categorical(df['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
-    df = df.sort_values(by=['Тип теста', 'Размер зуваляшки', 'Количество листов в вагонетке'], ascending=[True, False, False])
+    df = df.sort_values(by=['Тип теста', 'Размер зуваляшки, гр', 'Количество листов в вагонетке'], ascending=[True, False, False])
     df.reset_index(drop=True, inplace=True)
     return distribute_to_trolleys(df)
 
