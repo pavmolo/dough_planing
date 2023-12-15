@@ -274,6 +274,8 @@ if uploaded_file:
     dough_zero = zuvalashka_df.reset_index()
     dough_master = pd.pivot_table(zuvalashka_start, values=['Приготовление опары, мин', 'Замес теста, мин', 'Первая отстойка, мин', 'Вторая отскойка, мин.'], index='Тип теста', aggfunc='mean')
     dough_master = dough_master.reset_index()
+    dough_zero
+    dough_master
     dough_start = dough_zero.merge(dough_master, on='Тип теста', how='left')
     dough_start['Время отстойки теста'] = dough_start['Первая отстойка, мин'] + dough_start['Вторая отскойка, мин.']
     dough_start['Время изготовления теста'] = dough_start['Приготовление опары, мин'] + dough_start['Замес теста, мин']
