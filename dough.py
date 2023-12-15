@@ -273,7 +273,7 @@ if uploaded_file:
     zuvalashka_df = pd.pivot_table(zuvalashka_start, values='ШТ', index=['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Размер зуваляшки, гр', 'Тип теста'], aggfunc='sum')
     dough_zero = zuvalashka_df
     dough_zero = dough_zero.reset_index()
-    dough_master = pd.pivot_table(zuvalashka_start, values=['Приготовление опары, мин', 'Замес теста, мин', 'Первая отстойка, мин', 'Вторая отскойка, мин.', 'Размер зуваляшки, гр'], index='Тип теста', aggfunc='mean')
+    dough_master = pd.pivot_table(zuvalashka_start, values=['Приготовление опары, мин', 'Замес теста, мин', 'Первая отстойка, мин', 'Вторая отскойка, мин.'], index='Тип теста', aggfunc='mean')
     dough_master = dough_master.reset_index()
     dough_start = dough_zero.merge(dough_master, on='Тип теста', how='left')
     dough_start['Время отстойки теста'] = dough_start['Первая отстойка, мин'] + dough_start['Вторая отскойка, мин.']
@@ -286,6 +286,7 @@ if uploaded_file:
         lambda row: subtract_minutes(row['Время оконч. изг. теста'], row['Время изготовления теста']),
         axis=1
     )
+    dough_start
     dough_start['Масса теста, кг'] = dough_start['Размер зуваляшки, гр'] * dough_start['ШТ'] / 1000
     dough_df = pd.pivot_table(dough_start, values='Масса теста, кг', index=['Время начала изг. теста', 'Время оконч. изг. теста', 'Тип теста'], aggfunc='sum')
 
