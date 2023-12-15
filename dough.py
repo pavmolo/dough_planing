@@ -6,6 +6,7 @@ from datetime import timedelta
 from math import ceil
 from datetime import datetime
 from openpyxl.styles import Alignment
+from datetime import datetime, timedelta
 
 def distribute_to_trolleys(df):
     df['Необходимо листов'] = np.ceil(df['Количество изделий план'] / df['Количество на листе'])
