@@ -32,8 +32,9 @@ def distribute_to_trolleys(df):
                     }
                 
                 available_sheets = min(row['Количество листов в вагонетке'] - current_trolley_sheets, sheets_needed)
-                trolley_info[trolley_id]['Листов в Вагонетке'] += available_sheets
-                if available_sheets <= 0:
+                
+                # Проверяем, чтобы общее количество листов в вагонетке не превышало максимум
+                if trolley_info[trolley_id]['Листов в Вагонетке'] + available_sheets > row['Количество листов в вагонетке']:
                     trolley_counter += 1
                     current_trolley_sheets = 0
                     continue
