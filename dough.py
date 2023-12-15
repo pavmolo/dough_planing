@@ -124,13 +124,14 @@ def to_df_from_schedule(ovens_schedule):
     return full_schedule_df
 
 # Функция для сохранения DataFrame в Excel
-def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_df):
+def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_df, dough_df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         oven_schedule_df.to_excel(writer, sheet_name='Oven Schedule', index=False)
         trolley_composition_df.to_excel(writer, sheet_name='Trolley Composition', index=False)
         df_formovka.to_excel(writer, sheet_name='Form Plan', index=True)
         zuvalashka_df.to_excel(writer, sheet_name='Zuvalashka Plan', index=True)
+        dough_df.to_excel(writer, sheet_name='Dough Plan', index=True)
         
         # Получаем активный объект workbook и sheet
         workbook  = writer.book
@@ -270,12 +271,28 @@ if uploaded_file:
         axis=1
     ) 
     zuvalashka_df = pd.pivot_table(zuvalashka_start, values='ШТ', index=['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Размер зуваляшки, гр'], aggfunc='sum')
-
+    dough_zero = zuvalashka_df.copy()
+    dough_zero = dough_zero.reset_index()
+    dough_master = pd.pivot_table(zuvalashka_start, values=['Приготовление опары, мин', 'Замес теста, мин', 'Первая отстойка, мин', 'Вторая отскойка, мин.'], index='Тип теста', aggfunc='mean')
+    dough_master = dough_master.reset_index()
+    dough_start = dough_zero.merge(dough_master, on='Тип теста', how='left')
+    dough_start['Время отстойки теста'] = dough_start['Первая отстойка, мин'] + dough_start['Вторая отскойка, мин.']
+    dough_start['Время изготовления теста'] = dough_start['Приготовление опары, мин'] + dough_start['Замес теста, мин']
+    dough_start['Время оконч. изг. теста'] = dough_start.apply(
+        lambda row: subtract_minutes(row['Время начала изг. зуваляшек'], row['Время отстойки теста']),
+        axis=1
+    )
+    dough_start['Время начала изг. теста'] = dough_start.apply(
+        lambda row: subtract_minutes(row['Время оконч. изг. теста'], row['Время изготовления теста']),
+        axis=1
+    )
+    dough_start['Масса теста, кг'] = dough_start['Размер зуваляшки, гр'] * dough_start['ШТ'] / 1000
+    dough_df = pd.pivot_table(dough_start, values='Масса теста, кг', index=['Время начала изг. теста', 'Время оконч. изг. теста', 'Тип теста'], aggfunc='sum')
 
 
     
     # Теперь вызываем функцию to_excel с необходимыми аргументами
-    df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df)
+    df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df, dough_df)
     st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
 
     
