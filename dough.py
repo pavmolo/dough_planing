@@ -48,7 +48,7 @@ def distribute_to_trolleys(df):
                 if current_trolley_sheets >= row['Количество листов в вагонетке']:
                     trolley_counter += 1
                     current_trolley_sheets = 0
-            trolley_info[trolley_id]['Листов в Вагонетке'] += available_sheets
+                trolley_info[trolley_id]['Листов в Вагонетке'] += available_sheets
     
     trolley_df_list = []
     for trolley_id, info in trolley_info.items():
@@ -107,10 +107,12 @@ def schedule_oven_operations(start_shift, end_shift, num_ovens, change_trolley_t
                 for prod_info in trolley_info[trolley['Вагонетка']]['Продукция']
             ]
             composition = "\n".join(composition_list)
+            total_sheets = trolley_info[trolley['Вагонетка']]['Листов в Вагонетке']  # Общее количество листов
             
             new_row = pd.DataFrame({
                 'Вагонетка': [trolley['Вагонетка']],
-                'Состав': [composition]
+                'Состав': [composition],
+                'Листов': [total_sheets]  # Добавляем информацию о листах
             })
             
             trolley_composition = pd.concat([trolley_composition, new_row], ignore_index=True)
