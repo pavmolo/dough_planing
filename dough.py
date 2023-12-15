@@ -268,8 +268,7 @@ if uploaded_file:
     zuvalashka_start['Время начала изг. зуваляшек'] = zuvalashka_start.apply(
         lambda row: subtract_minutes(row['Время оконч. изг. зуваляшек'], row['Длит. формовки зуваляжки, мин']),
         axis=1
-    )
-    zuvalashka_start 
+    ) 
     zuvalashka_df = pd.pivot_table(zuvalashka_start, values='ШТ', index=['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Размер зуваляшки, гр'], aggfunc='sum')
 
 
