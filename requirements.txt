@@ -2,3 +2,5 @@ openpyxl==3.1.2
 pyxlsb==1.0.10
 XlsxWriter==3.1.2
 bytesbufio==1.0.3
+pandas==2.1.4
+DateTime==5.3
