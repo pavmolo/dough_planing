@@ -286,7 +286,6 @@ if uploaded_file:
         lambda row: subtract_minutes(row['Время оконч. изг. теста'], row['Время изготовления теста']),
         axis=1
     )
-    dough_start
     dough_start['Масса теста, кг'] = dough_start['Размер зуваляшки, гр'] * dough_start['ШТ'] / 1000
     dough_df = pd.pivot_table(dough_start, values='Масса теста, кг', index=['Время начала изг. теста', 'Время оконч. изг. теста', 'Тип теста'], aggfunc='sum')
 
