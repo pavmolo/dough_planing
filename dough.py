@@ -9,65 +9,41 @@ from openpyxl.styles import Alignment
 
 def distribute_to_trolleys(df):
     df['Необходимо листов'] = np.ceil(df['Количество изделий план'] / df['Количество на листе'])
-    sorted_df = df.sort_values(by=['Тип теста', 'Температура Печи'])
+    sorted_df = df.sort_values(by=['Тип теста', 'Температура Печи', 'Размер зуваляшки'], ascending=[True, True, False])
     
     trolley_info = {}
     trolley_counter = 1
     
-    for (test_type, temp), group in sorted_df.groupby(['Тип теста', 'Температура Печи'], observed=True):
-        current_trolley_sheets = 0
-        group = group.reset_index(drop=True)
+    for _, row in sorted_df.iterrows():
+        sheets_needed = row['Необходимо листов']
         
-        for idx, row in group.iterrows():
-            sheets_needed = row['Необходимо листов']
+        while sheets_needed > 0:
+            trolley_id = f'Вагонетка {trolley_counter}'
+            if trolley_id not in trolley_info:
+                trolley_info[trolley_id] = {
+                    'Температура Печи': row['Температура Печи'],
+                    'Время': row['Время'],
+                    'Продукция': [],
+                    'Листов в Вагонетке': 0
+                }
             
-            while sheets_needed > 0:
-                trolley_id = f'Вагонетка {trolley_counter}'
-                if trolley_id not in trolley_info:
-                    trolley_info[trolley_id] = {
-                        'Температура Печи': temp,
-                        'Время': row['Время'],
-                        'Продукция': [],
-                        'Листов в Вагонетке': 0  # Новое поле для количества листов
-                    }
-                
-                available_sheets = min(row['Количество листов в вагонетке'] - current_trolley_sheets, sheets_needed)
-                
-                # Проверяем, чтобы общее количество листов в вагонетке не превышало максимум
-                if trolley_info[trolley_id]['Листов в Вагонетке'] + available_sheets > row['Количество листов в вагонетке']:
-                    trolley_counter += 1
-                    current_trolley_sheets = 0
-                    continue
-                
-                trolley_info[trolley_id]['Продукция'].append({
-                    'Наименование товара': row['Наименование товара'],
-                    'Количество листов': available_sheets,
-                    'Количество на листе': row['Количество на листе']
-                })
-                
-                sheets_needed -= available_sheets
-                current_trolley_sheets += available_sheets
-                if current_trolley_sheets >= row['Количество листов в вагонетке']:
-                    trolley_counter += 1
-                    current_trolley_sheets = 0
+            if (trolley_info[trolley_id]['Температура Печи'] != row['Температура Печи'] or
+                trolley_info[trolley_id]['Листов в Вагонетке'] >= row['Количество листов в вагонетке']):
+                trolley_counter += 1
+                continue
+
+            available_sheets = min(row['Количество листов в вагонетке'] - trolley_info[trolley_id]['Листов в Вагонетке'], sheets_needed)
+            trolley_info[trolley_id]['Листов в Вагонетке'] += available_sheets
+
+            trolley_info[trolley_id]['Продукция'].append({
+                'Наименование товара': row['Наименование товара'],
+                'Количество листов': available_sheets,
+                'Количество на листе': row['Количество на листе']
+            })
+
+            sheets_needed -= available_sheets
     
-    trolley_df_list = []
-    for trolley_id, info in trolley_info.items():
-        trolley_dict = {
-            'Вагонетка': trolley_id,
-            'Температура Печи': info['Температура Печи'],
-            'Время': info['Время']
-        }
-        
-        for prod_info in info['Продукция']:
-            product_name = prod_info['Наименование товара']
-            sheets = prod_info['Количество листов']
-            quantity_per_sheet = prod_info['Количество на листе']
-            quantity = sheets * quantity_per_sheet
-            trolley_dict[product_name] = f"{sheets} листов ({quantity} штук)"
-        
-        trolley_df_list.append(trolley_dict)
-    
+    trolley_df_list = [dict(v, Вагонетка=k) for k, v in trolley_info.items()]
     return pd.DataFrame(trolley_df_list), trolley_info
 
 
