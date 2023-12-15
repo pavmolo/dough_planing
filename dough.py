@@ -131,7 +131,6 @@ def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_d
         trolley_composition_df.to_excel(writer, sheet_name='Trolley Composition', index=False)
         df_formovka.to_excel(writer, sheet_name='Form Plan', index=True)
         zuvalashka_df.to_excel(writer, sheet_name='Zuvalashka Plan', index=True)
-        #dough_df.to_excel(writer, sheet_name='Testo Plan', index=True)
         
         # Получаем активный объект workbook и sheet
         workbook  = writer.book
@@ -270,8 +269,9 @@ if uploaded_file:
         lambda row: subtract_minutes(row['Время оконч. изг. зуваляшек'], row['Длит. формовки зуваляжки, мин']),
         axis=1
     ) 
-    zuvalashka_df = pd.pivot_table(zuvalashka_start, values='ШТ', index=['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Размер зуваляшки, гр', 'Тип теста'], aggfunc='sum')
-    
+    zuvalashka_df = pd.pivot_table(zuvalashka_start, values='ШТ', index=['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Размер зуваляшки, гр'], aggfunc='sum')
+
+
 
     
     # Теперь вызываем функцию to_excel с необходимыми аргументами
