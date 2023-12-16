@@ -307,7 +307,7 @@ if uploaded_file:
         axis=1
     )
     dough_start['Масса теста, кг'] = dough_start['Размер зуваляшки, гр'] * dough_start['ШТ'] / 1000
-    dough_df = pd.pivot_table(dough_start, values='Масса теста, кг', index=['Время начала изг. теста', 'Время оконч. изг. теста', 'Тип теста'], aggfunc='sum')
+    dough_df = pd.pivot_table(dough_start, values='Масса теста, кг', index=['Время начала изг. теста', 'Время оконч. изг. теста', 'Тип теста'], aggfunc='sum')reset_index()
 
 
     # Преобразование столбца 'Время оконч. изг. теста' из строки в формат времени
