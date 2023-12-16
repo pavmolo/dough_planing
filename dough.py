@@ -271,12 +271,12 @@ if uploaded_file:
         lambda row: subtract_minutes(row['Время оконч. изг. зуваляшек'], row['Длит. формовки зуваляжки, мин']),
         axis=1
     )
-    zuvalashka_start
+    zuvalashka_start.info()
     zuvalashka_df = zuvalashka_start.groupby(['Время начала изг. зуваляшек', 
                                           'Время оконч. изг. зуваляшек', 
                                           'Тип теста', 
                                           'Размер зуваляшки, гр']).agg({'ШТ': 'sum'}).reset_index()
-    zuvalashka_df
+    zuvalashka_df.info()
     dough_zero = zuvalashka_df.reset_index()
     dough_zero
     dough_master = pd.pivot_table(zuvalashka_start, values=['Приготовление опары, мин', 'Замес теста, мин', 'Первая отстойка, мин', 'Вторая отскойка, мин.'], index='Тип теста', aggfunc='mean').reset_index()
