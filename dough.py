@@ -367,7 +367,7 @@ if uploaded_file:
             adjusted_df.loc[index, 'Масса теста, кг'] = current_mass
     
     # Сортировка по типу теста и временному окну
-    adjusted_df.sort_values(by=['Тип теста', 'Временное окно'], inplace=True)
+    adjusted_df.sort_values(by=['Временное окно'], inplace=True)
 
     adjusted_df
     
