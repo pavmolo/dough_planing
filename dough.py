@@ -370,7 +370,7 @@ if uploaded_file:
                 next_window = add_minutes(next_window)
     
     # Сортировка результатов
-    adjusted_df.sort_values(by=['Тип теста', 'Временное окно'], inplace=True)
+    adjusted_df.sort_values(by=['Временное окно'], inplace=True)
 
 
     adjusted_df
