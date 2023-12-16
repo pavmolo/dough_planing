@@ -272,10 +272,10 @@ if uploaded_file:
         axis=1
     )
     zuvalashka_start.info()
-    zuvalashka_df = zuvalashka_start.groupby(['Время начала изг. зуваляшек',
-                                          'Время оконч. изг. зуваляшек',
-                                          'Тип теста',
-                                          'Размер зуваляшки, гр'], as_index=False)['ШТ'].sum()
+    zuvalashka_df = pd.pivot_table(zuvalashka_start, 
+                               values='ШТ', 
+                               index=['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр'], 
+                               aggfunc='sum')
     zuvalashka_df.info()
     dough_zero = zuvalashka_df.reset_index()
     dough_zero
