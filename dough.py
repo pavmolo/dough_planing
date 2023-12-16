@@ -290,6 +290,7 @@ if uploaded_file:
     
     # Удаление временного столбца unique_key
     zuvalashka_df = zuvalashka_df.drop(columns=['unique_key'])
+    zuvalashka_df = zuvalashka_df[['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр', 'ШТ']]
     dough_zero = zuvalashka_df.reset_index()
     
     dough_master = pd.pivot_table(zuvalashka_start, values=['Приготовление опары, мин', 'Замес теста, мин', 'Первая отстойка, мин', 'Вторая отскойка, мин.'], index='Тип теста', aggfunc='mean').reset_index()
