@@ -335,44 +335,42 @@ if uploaded_file:
         new_time = time_obj + timedelta(minutes=5)
         return new_time.strftime('%H:%M')
     
-    # Максимальная масса теста для одного замеса
     max_mass = 60
     
     # Создаем копию DataFrame для изменений
     adjusted_df = pivot_df.copy()
     
-    # Перебор строк DataFrame
+    # Для каждой строки проверяем и распределяем массу теста
     for index, row in adjusted_df.iterrows():
-        current_mass = row['Масса теста, кг']
-        
-        # Распределение избытка массы теста
-        while current_mass > max_mass:
-            excess_mass = current_mass - max_mass
+        if row['Масса теста, кг'] > max_mass:
+            # Разделение избытка массы теста на отдельные порции
+            excess_mass = row['Масса теста, кг'] - max_mass
+            adjusted_df.at[index, 'Масса теста, кг'] = max_mass
+    
             next_window = add_minutes(row['Временное окно'])
+            next_index = adjusted_df[(adjusted_df['Тип теста'] == row['Тип теста']) &
+                                     (adjusted_df['Временное окно'] == next_window)].index
     
-            # Поиск следующего временного окна
-            next_row_index = adjusted_df[(adjusted_df['Тип теста'] == row['Тип теста']) &
-                                         (adjusted_df['Временное окно'] == next_window)].index
-            if next_row_index.empty:
-                # Создание нового временного окна, если оно не существует
-                adjusted_df = adjusted_df._append({'Тип теста': row['Тип теста'],
-                                                  'Временное окно': next_window,
-                                                  'Масса теста, кг': excess_mass}, ignore_index=True)
-                current_mass = max_mass
-            else:
-                # Добавление избытка к существующему временному окну
-                adjusted_df.loc[next_row_index, 'Масса теста, кг'] += excess_mass
-                if adjusted_df.loc[next_row_index, 'Масса теста, кг'].item() > max_mass:
-                    # Если добавление привело к избытку в следующем окне, продолжаем распределение
-                    current_mass = adjusted_df.loc[next_row_index, 'Масса теста, кг'].item() - max_mass
+            while excess_mass > 0:
+                if next_index.empty:
+                    # Если следующего окна нет, создаем его
+                    new_row = {'Тип теста': row['Тип теста'],
+                               'Временное окно': next_window,
+                               'Масса теста, кг': min(excess_mass, max_mass)}
+                    adjusted_df = adjusted_df.append(new_row, ignore_index=True)
+                    excess_mass -= new_row['Масса теста, кг']
+                    next_window = add_minutes(next_window)
+                    next_index = adjusted_df[(adjusted_df['Тип теста'] == row['Тип теста']) &
+                                             (adjusted_df['Временное окно'] == next_window)].index
                 else:
-                    current_mass = max_mass
+                    # Добавляем избыток к следующему временному окну
+                    current_mass = adjusted_df.at[next_index[0], 'Масса теста, кг']
+                    additional_mass = min(excess_mass, max_mass - current_mass)
+                    adjusted_df.at[next_index[0], 'Масса теста, кг'] += additional_mass
+                    excess_mass -= additional_mass
     
-            # Обновление массы теста в текущем окне
-            adjusted_df.loc[index, 'Масса теста, кг'] = current_mass
-    
-    # Сортировка по типу теста и временному окну
-    adjusted_df.sort_values(by=['Временное окно'], inplace=True)
+    # Сортировка результатов
+    adjusted_df.sort_values(by=['Тип теста', 'Временное окно'], inplace=True)
 
 
     adjusted_df
