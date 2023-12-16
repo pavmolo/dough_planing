@@ -275,7 +275,7 @@ if uploaded_file:
     zuvalashka_df = zuvalashka_start.groupby(['Время начала изг. зуваляшек', 
                                           'Время оконч. изг. зуваляшек', 
                                           'Тип теста', 
-                                          'Размер зуваляшки, гр']).agg({'ШТ': 'sum'}).reset_index()
+                                          'Размер зуваляшки, гр'], as_index=False).agg({'ШТ': 'sum'})
     zuvalashka_df.info()
     dough_zero = zuvalashka_df.reset_index()
     dough_zero
