@@ -310,6 +310,20 @@ if uploaded_file:
     dough_df = pd.pivot_table(dough_start, values='Масса теста, кг', index=['Время начала изг. теста', 'Время оконч. изг. теста', 'Тип теста'], aggfunc='sum')
 
 
+    # Преобразование столбца 'Время оконч. изг. теста' из строки в формат времени
+    dough_df['Время оконч. изг. теста'] = pd.to_datetime(dough_df['Время оконч. изг. теста'], format='%H:%M')
+    
+    # Функция для округления времени до ближайшего 5-минутного интервала
+    def round_time(dt, round_to):
+        rounded_minute = (dt.minute // round_to) * round_to
+        return dt.replace(minute=rounded_minute, second=0, microsecond=0)
+    
+    # Применение функции округления к столбцу 'Время оконч. изг. теста'
+    dough_df['Временное окно'] = dough_df['Время оконч. изг. теста'].apply(lambda x: round_time(x, 5))
+    
+    # Преобразование обратно в строку, если это необходимо
+    dough_df['Временное окно'] = dough_df['Временное окно'].dt.strftime('%H:%M')
+
     
     # Теперь вызываем функцию to_excel с необходимыми аргументами
     df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df, dough_df)
