@@ -323,7 +323,53 @@ if uploaded_file:
     
     # Преобразование обратно в строку, если это необходимо
     dough_df['Временное окно'] = dough_df['Временное окно'].dt.strftime('%H:%M')
+    # Создаем сводную таблицу
+    pivot_df = dough_df.pivot_table(values='Масса теста, кг', 
+                                    index=['Тип теста', 'Временное окно'], 
+                                    aggfunc='sum').reset_index()
 
+
+    # Функция для добавления 5 минут к времени
+    def add_minutes(time_str):
+        time_obj = datetime.strptime(time_str, '%H:%M')
+        new_time = time_obj + timedelta(minutes=5)
+        return new_time.strftime('%H:%M')
+    
+    # Максимальная масса теста для одного замеса
+    max_mass = 60
+    
+    # Создаем копию DataFrame для изменений
+    adjusted_df = pivot_df.copy()
+    
+    # Перебор строк DataFrame
+    for index, row in adjusted_df.iterrows():
+        current_mass = row['Масса теста, кг']
+        
+        # Распределение избытка массы теста
+        while current_mass > max_mass:
+            excess_mass = current_mass - max_mass
+            current_mass = max_mass
+            next_window = add_minutes(row['Временное окно'])
+    
+            # Поиск следующего временного окна
+            next_row_index = adjusted_df[(adjusted_df['Тип теста'] == row['Тип теста']) &
+                                         (adjusted_df['Временное окно'] == next_window)].index
+            if next_row_index.empty:
+                # Создание нового временного окна, если оно не существует
+                adjusted_df = adjusted_df.append({'Тип теста': row['Тип теста'],
+                                                  'Временное окно': next_window,
+                                                  'Масса теста, кг': excess_mass}, ignore_index=True)
+            else:
+                # Добавление избытка к существующему временному окну
+                adjusted_df.loc[next_row_index, 'Масса теста, кг'] += excess_mass
+    
+            # Обновление массы теста в текущем окне
+            adjusted_df.loc[index, 'Масса теста, кг'] = current_mass
+    
+    # Сортировка по типу теста и временному окну
+    adjusted_df.sort_values(by=['Тип теста', 'Временное окно'], inplace=True)
+
+    adjusted_df
     
     # Теперь вызываем функцию to_excel с необходимыми аргументами
     df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df, dough_df)
