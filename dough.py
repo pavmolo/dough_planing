@@ -356,7 +356,7 @@ if uploaded_file:
                                          (adjusted_df['Временное окно'] == next_window)].index
             if next_row_index.empty:
                 # Создание нового временного окна, если оно не существует
-                adjusted_df = adjusted_df.append({'Тип теста': row['Тип теста'],
+                adjusted_df = adjusted_df._append({'Тип теста': row['Тип теста'],
                                                   'Временное окно': next_window,
                                                   'Масса теста, кг': excess_mass}, ignore_index=True)
             else:
