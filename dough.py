@@ -274,8 +274,7 @@ if uploaded_file:
     zuvalashka_start
     zuvalashka_df = pd.pivot_table(zuvalashka_start, 
                                values='ШТ', 
-                               index='Время начала изг. зуваляшек', 
-                               columns=['Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр'], 
+                               index=['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр'], 
                                aggfunc='sum')
     zuvalashka_df
     dough_zero = zuvalashka_info.reset_index()
