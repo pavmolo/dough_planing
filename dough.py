@@ -52,7 +52,7 @@ def distribute_to_trolleys(df):
 def distribute_to_trolleys_sorted(df):
     # Конвертация 'кусок' в NaN или другое специфическое число, если необходимо
     df['Размер зуваляшки, гр'] = pd.to_numeric(df['Размер зуваляшки, гр'], errors='coerce').fillna(999)
-    df['Тип теста'] = pd.Categorical(df['Тип теста'], categories=['сладкое', 'соленое'], ordered=True)
+    df['Тип теста'] = pd.Categorical(df['Тип теста'], categories=['сладкое', 'соленое', 'синнабон'], ordered=True)
     df = df.sort_values(by=['Тип теста', 'Размер зуваляшки, гр', 'Количество листов в вагонетке'], ascending=[True, False, False])
     df.reset_index(drop=True, inplace=True)
     return distribute_to_trolleys(df)
