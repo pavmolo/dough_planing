@@ -279,7 +279,7 @@ if uploaded_file:
                                      zuvalashka_start['Время оконч. изг. зуваляшек'].astype(str) + '_' + \
                                      zuvalashka_start['Тип теста'].astype(str) + '_' + \
                                      zuvalashka_start['Размер зуваляшки, гр'].astype(str) + '_' + \
-                                     zuvalashka_start['Длит. формовки зуваляжки, мин']
+                                     zuvalashka_start['Длит. формовки зуваляжки, мин'].astype(str)
     
     # Агрегирование с использованием pivot_table
     zuvalashka_df = zuvalashka_start.pivot_table(index='unique_key', values='ШТ', aggfunc='sum').reset_index()
@@ -290,7 +290,7 @@ if uploaded_file:
     
     # Преобразование типов данных обратно, если это необходимо
     zuvalashka_df['Размер зуваляшки, гр'] = zuvalashka_df['Размер зуваляшки, гр'].astype(int)
-    
+    zuvalashka_df['Длит. формовки зуваляжки, мин'] = zuvalashka_df['Длит. формовки зуваляжки, мин'].astype(int)
     # Удаление временного столбца unique_key
     zuvalashka_df = zuvalashka_df.drop(columns=['unique_key'])
     zuvalashka_df = zuvalashka_df[['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр', 'ШТ']]
