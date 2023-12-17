@@ -273,7 +273,6 @@ if uploaded_file:
         lambda row: subtract_minutes(row['Время оконч. изг. зуваляшек'], row['Длит. формовки зуваляжки, мин']),
         axis=1
     )
-    zuvalashka_start['Время начала изг. зуваляшек'] = zuvalashka_start['Время начала изг. зуваляшек'] * zuvalashka_start['ШТ']
 
     # Создание уникального ключа
     zuvalashka_start['unique_key'] = zuvalashka_start['Время начала изг. зуваляшек'].astype(str) + '_' + \
