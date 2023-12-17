@@ -291,6 +291,10 @@ if uploaded_file:
     # Преобразование типов данных обратно, если это необходимо
     zuvalashka_df['Размер зуваляшки, гр'] = zuvalashka_df['Размер зуваляшки, гр'].astype(int)
     zuvalashka_df['Длит. формовки зуваляжки, мин'] = zuvalashka_df['Длит. формовки зуваляжки, мин'].astype(float) * zuvalashka_df['ШТ']
+    zuvalashka_df['Время начала изг. зуваляшек'] = zuvalashka_df.apply(
+        lambda row: subtract_minutes(row['Время оконч. изг. зуваляшек'], row['Длит. формовки зуваляжки, мин']),
+        axis=1
+    )
     # Удаление временного столбца unique_key
     zuvalashka_df = zuvalashka_df.drop(columns=['unique_key'])
     zuvalashka_df = zuvalashka_df[['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр', 'ШТ']]
