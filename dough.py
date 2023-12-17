@@ -374,8 +374,6 @@ if uploaded_file:
     # Сортировка результатов
     adjusted_df.sort_values(by=['Временное окно'], inplace=True)
 
-
-    adjusted_df
     
     # Теперь вызываем функцию to_excel с необходимыми аргументами
     df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df, dough_df, adjusted_df)
