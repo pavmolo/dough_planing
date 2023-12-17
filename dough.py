@@ -239,11 +239,13 @@ if uploaded_file:
     
     # Функция для вычитания минут из времени
     def subtract_minutes(time_str, minutes):
+        # Преобразование строки времени в объект datetime
         time_obj = datetime.strptime(time_str, '%H:%M')
+        
+        # Вычитание минут
         new_time = time_obj - timedelta(minutes=minutes)
-        # Если новое время меньше начального, добавляем один день
-        if new_time < time_obj:
-            new_time += timedelta(days=1)
+    
+        # Преобразование обратно в строку
         return new_time.strftime('%H:%M')
     
     df_vag = pd.DataFrame(index=result_df['Вагонетка'])
@@ -346,12 +348,9 @@ if uploaded_file:
 
 
     # Функция для добавления 5 минут к времени
-    def add_minutes(time_str, minutes):
+    def add_minutes(time_str):
         time_obj = datetime.strptime(time_str, '%H:%M')
-        new_time = time_obj + timedelta(minutes=minutes)
-        # Если новое время меньше начального, добавляем один день
-        if new_time < time_obj:
-            new_time += timedelta(days=1)
+        new_time = time_obj + timedelta(minutes=5)
         return new_time.strftime('%H:%M')
     
     # Максимальная масса теста для одного замеса
@@ -395,5 +394,3 @@ if uploaded_file:
     # Теперь вызываем функцию to_excel с необходимыми аргументами
     df_xlsx = to_excel(oven_schedule_df, trolley_composition, df_sorted, zuvalashka_df, dough_df, adjusted_df)
     st.download_button(label='📥 Скачать план в Excel', data=df_xlsx, file_name='Backing_Plan.xlsx')
-
-    
