@@ -156,7 +156,7 @@ if shift == "I (13-21)":
     shift_fin = '21:00'
 else:
     shift_start = '21:00'
-    shift_fin = '02:00'
+    shift_fin = '2:00'
 st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 uploaded_file = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 
