@@ -337,7 +337,7 @@ if uploaded_file:
         return dt.replace(minute=rounded_minute, second=0, microsecond=0)
     
     # Применение функции округления к столбцу 'Время оконч. изг. теста'
-    dough_df['Временное окно'] = dough_df['Время оконч. изг. теста'].apply(lambda x: round_time(x, 5))
+    dough_df['Временное окно'] = dough_df['Время начала изг. теста'].apply(lambda x: round_time(x, 5))
     
     # Преобразование обратно в строку, если это необходимо
     dough_df['Временное окно'] = dough_df['Временное окно'].dt.strftime('%H:%M')
