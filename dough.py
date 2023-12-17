@@ -273,18 +273,19 @@ if uploaded_file:
         lambda row: subtract_minutes(row['Время оконч. изг. зуваляшек'], row['Длит. формовки зуваляжки, мин']),
         axis=1
     )
-
+    
     # Создание уникального ключа
     zuvalashka_start['unique_key'] = zuvalashka_start['Время начала изг. зуваляшек'].astype(str) + '_' + \
                                      zuvalashka_start['Время оконч. изг. зуваляшек'].astype(str) + '_' + \
                                      zuvalashka_start['Тип теста'].astype(str) + '_' + \
-                                     zuvalashka_start['Размер зуваляшки, гр'].astype(str)
+                                     zuvalashka_start['Размер зуваляшки, гр'].astype(str) + '_' + \
+                                     zuvalashka_start['Длит. формовки зуваляжки, мин']
     
     # Агрегирование с использованием pivot_table
     zuvalashka_df = zuvalashka_start.pivot_table(index='unique_key', values='ШТ', aggfunc='sum').reset_index()
     
     # Разбиение unique_key обратно на отдельные столбцы
-    zuvalashka_df[['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр']] = \
+    zuvalashka_df[['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр', 'Длит. формовки зуваляжки, мин']] = \
         zuvalashka_df['unique_key'].str.split('_', expand=True)
     
     # Преобразование типов данных обратно, если это необходимо
@@ -293,6 +294,7 @@ if uploaded_file:
     # Удаление временного столбца unique_key
     zuvalashka_df = zuvalashka_df.drop(columns=['unique_key'])
     zuvalashka_df = zuvalashka_df[['Время начала изг. зуваляшек', 'Время оконч. изг. зуваляшек', 'Тип теста', 'Размер зуваляшки, гр', 'ШТ']]
+    
     dough_zero = zuvalashka_df.reset_index()
     
     dough_master = pd.pivot_table(zuvalashka_start, values=['Приготовление опары, мин', 'Замес теста, мин', 'Первая отстойка, мин', 'Вторая отскойка, мин.'], index='Тип теста', aggfunc='mean').reset_index()
