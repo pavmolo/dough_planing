@@ -146,14 +146,24 @@ def to_excel(oven_schedule_df, trolley_composition_df, df_formovka, zuvalashka_d
 
     return output.getvalue()
 
-
+shift = st.radio(
+    "На какую смену делаем план по сдобе",
+    ["I (13-21)", "II (21-2)"],
+    index=None,
+)
+if shift == "I (13-21)":
+    shift_start = '13:00'
+    shift_fin = '21:00'
+else:
+    shift_start = '21:00'
+    shift_fin = '02:00'
 st.markdown('''<h3>Файл с данными</h3>''', unsafe_allow_html=True)
 uploaded_file = st.file_uploader("Выберите XLSX файл с данными", accept_multiple_files=False)
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
     sorted_trolleys_df, trolley_info = distribute_to_trolleys_sorted(df)
-    ovens_schedule, trolley_composition = schedule_oven_operations('13:00', '21:00', 3, 2, 5, sorted_trolleys_df, trolley_info)
+    ovens_schedule, trolley_composition = schedule_oven_operations(shift_start, shift_fin, 3, 2, 5, sorted_trolleys_df, trolley_info)
 
     # Преобразование ovens_schedule в DataFrame
     oven_schedule_list = []
